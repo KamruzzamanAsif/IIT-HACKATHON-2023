@@ -15,7 +15,7 @@ contract EtherToABX {
     }
 
     function add_ABX_liquidity(uint256 abx_amount) public{
-        abx_token.approve(address(this), abx_amount);
+//        abx_token.approve(address(this), abx_amount);
 
         ABXReserve = abx_amount;
         abx_token.transferFrom(msg.sender, address(this), abx_amount);
