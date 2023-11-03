@@ -1,9 +1,38 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import NavbarPlatform from 'components/Navbar/NavbarPlatform';
+import { useAccount } from 'wagmi';
+import { ethers } from 'ethers';
+import DAOFactoryABI from '../contractInfo/DAOFactory/DAOFactoryABI.json';
+import DAOFactoryAddress from '../contractInfo/DAOFactory/DAOFactoryAddress.json';
 
 export default function CreateCommunity() {
   const [communityName, setCommunityName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+
+  const { address, isConnected, connector } = useAccount({
+    async onConnect({ address, connector, isReconnected }) {
+      console.log('Connected', { address, connector, isReconnected })
+    },
+  })
+
+  const createDAOFactoryContract = (): ethers.Contract | null => {
+    const { ethereum } = window as Window & { ethereum?: any };
+
+    const contractAddress = DAOFactoryAddress.contractAddress;
+    const contractABI = DAOFactoryABI.abi;
+    
+    if (typeof ethereum !== "undefined") {
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const Contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );      
+      return Contract;
+    }
+    return null;
+  };
 
   const handleCommunityNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setCommunityName(event.target.value);
@@ -16,6 +45,13 @@ export default function CreateCommunity() {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     // You can handle the form submission here, e.g., sending data to a server.
+    let contract = createDAOFactoryContract();
+    console.log(contract);
+
+    let communityTokenName = communityName+"token";
+    let communityTokenSymbol = communityName+"$";
+    contract.createDAO(communityName, communityTokenName, communityTokenSymbol);
+
     console.log('Community Name:', communityName);
     console.log('Description:', description);
   };

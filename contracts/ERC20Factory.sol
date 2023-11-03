@@ -8,9 +8,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 contract ERC20Factory is ERC20, ERC20Burnable, ERC20Pausable, Ownable, ERC20Permit {
-    constructor(uint256 initialAmount, string memory tokenName, string memory tokenSymbol)
+    constructor(uint256 initialAmount, string memory tokenName, string memory tokenSymbol, address _token_owner)
         ERC20(tokenName, tokenSymbol)
-        Ownable(msg.sender)
+        Ownable(_token_owner)
         ERC20Permit(tokenName)
     {
         _mint(msg.sender, initialAmount * 10 ** decimals());

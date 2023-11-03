@@ -7,7 +7,7 @@ import "./ArtNFT.sol";
 
 contract DAO {
     // The native community token of the DAO
-    string community_name;
+    string public community_name;
     IERC20 public token;
     ArtNFT public nft;
 

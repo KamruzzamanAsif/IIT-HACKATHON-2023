@@ -1,32 +1,63 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
+import { useAccount } from 'wagmi';
+import { ethers } from 'ethers';
+import DAOFactoryABI from '../../contractInfo/DAOFactory/DAOFactoryABI.json';
+import DAOFactoryAddress from '../../contractInfo/DAOFactory/DAOFactoryAddress.json';
+
 
 export default function CommunityList() {
-  const communities = [
-    {
-      id: 1,
-      name: 'Community A',
-      description: 'Description for Community A',
+  const [communityNames, setCommunityNames] = useState([]); // State to store community names
+
+  const { address, isConnected, connector } = useAccount({
+  async onConnect({ address, connector, isReconnected }) {
+      console.log('Connected', { address, connector, isReconnected })
     },
-    {
-      id: 2,
-      name: 'Community B',
-      description: 'Description for Community B',
-    },
-    {
-      id: 3,
-      name: 'Community C',
-      description: 'Description for Community C',
-    },
-    // Add more communities as needed
-  ];
+  })
+
+  const createDAOFactoryContract = (): ethers.Contract | null => {
+    const { ethereum } = window as Window & { ethereum?: any };
+
+    const contractAddress = DAOFactoryAddress.contractAddress;
+    const contractABI = DAOFactoryABI.abi;
+    
+    if (typeof ethereum !== "undefined") {
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const Contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );      
+      return Contract;
+    }
+    return null;
+  };
+  
+  async function fetchCommunityNames() {
+    try {
+      const contract = createDAOFactoryContract();
+      console.log(contract);
+  
+      const communityList = await contract.getAllCommunityNames();
+      console.log(communityList);
+      // Set the community names in the state
+      setCommunityNames(communityList);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+  
+  useEffect(() => {
+    fetchCommunityNames();
+  }, [])
 
   return (
     <div className="flex flex-wrap justify-center">
-      {communities.map((community) => (
-        <div key={community.id} className="m-4 max-w-md">
+      {communityNames.map((communityName, index) => (
+        <div key={index} className="m-4 max-w-md">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">{community.name}</h2>
-            <p className="text-gray-600">{community.description}</p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">{communityName}</h2>
+            {/* You can add additional information for each community if needed */}
           </div>
         </div>
       ))}
