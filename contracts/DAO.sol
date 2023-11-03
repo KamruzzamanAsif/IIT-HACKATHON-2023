@@ -67,17 +67,20 @@ contract DAO {
     }
 
     // Function to execute a passed proposal
-    function execute(uint256 proposalId) external {
+    function execute(uint256 proposalId) external returns (uint256){
         if(proposes[proposalId].upvote > proposes[proposalId].downvote){
-            token.transferFrom(address(this), payable(proposes[proposalId].proposer), proposes[proposalId].abxAmountLocked); 
-            nft.safeMint(msg.sender, proposes[proposalId].art_uri, 10);
-            if(proposes[proposalId].genreCode == 1){ // 1 == Exclusive
+            token.transfer(payable(proposes[proposalId].proposer), proposes[proposalId].abxAmountLocked); 
+            return nft.safeMint(msg.sender, proposes[proposalId].art_uri, 10);
+            /*if(proposes[proposalId].genreCode == 1){ // 1 == Exclusive
             // send to Auction
             }
             else if(proposes[proposalId].genreCode == 2){ // normal
                 // send to Timeline
-            }
+            }*/
         } 
+    }
+    function getTotalVote(uint256 pid) public view returns (uint256){
+        return proposes[pid].upvote + proposes[pid].downvote;
     }
 
     function getContractInfo(uint256 contractId) public view returns (string memory){
