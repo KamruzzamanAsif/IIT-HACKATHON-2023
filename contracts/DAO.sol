@@ -26,7 +26,7 @@ contract DAO {
         uint32 genreCode;
     }
 
-    proposal[] proposes;
+    proposal[] public proposes;
 
     // Constructor
     constructor(string memory _community_name, address token_address, address _nft_address) {
