@@ -6,15 +6,18 @@ import "./ERC20Factory.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract DAOFactory {
-
+    address nft_address;
     // Mapping of DAO addresses to their native community tokens
     mapping(address => IERC20) public daoToToken;
 
     // Event emitted when a new DAO is created
     event DAOCreated(address daoAddress, address tokenAddress);
+    constructor(address _nft_address){
+        nft_address = _nft_address;
+    }
 
     // Creates a new DAO and generates a native community token
-    function createDAO(string memory community_name, address nft_address) external returns (address) {
+    function createDAO(string memory community_name) external returns (address) {
         // Create a new ERC20 token for the DAO
         ERC20 token = new ERC20Factory(1000000, "DAO Token", "DAO");
 
