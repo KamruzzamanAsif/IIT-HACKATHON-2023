@@ -1,5 +1,5 @@
 Arguments: 
-  /home/abhijit/.nvm/versions/node/v18.18.2/bin/node /home/abhijit/.nvm/versions/node/v18.18.2/bin/yarn add @openzeppelin/test-environment
+  /home/abhijit/.nvm/versions/node/v18.18.2/bin/node /home/abhijit/.nvm/versions/node/v18.18.2/bin/yarn
 
 PATH: 
   /home/abhijit/.nvm/versions/node/v18.18.2/bin:/home/abhijit/local/bin:/home/abhijit/local/bin:/home/abhijit/local/bin:/home/abhijit/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin
@@ -14,10 +14,8 @@ Platform:
   linux x64
 
 Trace: 
-  Error: https://registry.npmjs.org/@openzeppelin%2ftest-environment: ETIMEDOUT
-      at Timeout._onTimeout (/home/abhijit/.nvm/versions/node/v18.18.2/lib/node_modules/yarn/lib/cli.js:141550:19)
-      at listOnTimeout (node:internal/timers:569:17)
-      at process.processTimers (node:internal/timers:512:7)
+  Error: getaddrinfo EAI_AGAIN registry.npmjs.org
+      at GetAddrInfoReqWrap.onlookup [as oncomplete] (node:dns:108:26)
 
 npm manifest: 
   {
@@ -47,7 +45,7 @@ npm manifest:
     },
     "dependencies": {
       "@nomiclabs/hardhat-solhint": "^2.0.1",
-      "@openzeppelin/contracts": "^4.9.3",
+      "@openzeppelin/contracts": "^5.0.0",
       "dotenv": "^16.0.1",
       "edit-json-file": "^1.7.0",
       "prettier": "^2.7.1",
