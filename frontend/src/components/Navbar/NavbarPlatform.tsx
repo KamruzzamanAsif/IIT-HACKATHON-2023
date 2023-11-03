@@ -31,8 +31,11 @@ export default function NavbarPlatform() {
             <Link href="/createCommunity">
               <a className="text-gray-600 hover:text-gray-800 font-extrabold">Create Community</a>
             </Link>
-            <Link href="/join-community">
+            <Link href="/community">
               <a className="text-gray-600 hover:text-gray-800 font-extrabold">Join Community</a>
+            </Link>
+            <Link href="/marketplace">
+              <a className="text-gray-600 hover:text-gray-800 font-extrabold">Marketplace</a>
             </Link>
             <ConnectWallet />
           </div>

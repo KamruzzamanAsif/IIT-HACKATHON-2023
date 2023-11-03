@@ -5,12 +5,12 @@ import ABXABI from '../../contractInfo/ABX/ABXABI.json';
 import ABXAddress from '../../contractInfo/ABX/ABXAddress.json';
 import { useAccount } from 'wagmi';
 import { ethers } from 'ethers';
+import { useEffect } from 'react';
+
 
 export default function BuyArtBlockToken() {
-  const currentUserArtBlockTokens: number = 100;
-  const customArtBlockTokenPrice: number = 0.1;
-  const approveValue: number = 1000;
   const [buyAmount, setBuyAmount] = useState<number>(0);
+  const [abxtoken, setAbxtoken] = useState<string>("");
 
   const { address, isConnected, connector } = useAccount({
     async onConnect({ address, connector, isReconnected }) {
@@ -108,12 +108,10 @@ export default function BuyArtBlockToken() {
 
 
   async function exchange(contract) {
-    const valueInEth = '0.00005';
-    const valueInWei = ethers.utils.parseEther(valueInEth);
-    const value = Math.floor(parseInt("0.05") / 10)
+    const valueInWei = buyAmount;
 
     try {
-        // Estimate the gas limit for the `ethToAbx` function call with the specified value
+        // Estimate the gas limit for the `ethToAbx` function call
         const gasEstimation = await contract.estimateGas.ethToAbx();
 
         console.log("Gas Estimation:", gasEstimation);
@@ -121,26 +119,28 @@ export default function BuyArtBlockToken() {
         // You can add a margin to the gas estimation if needed
         const gasLimitWithMargin = gasEstimation.mul(2);
 
-        // Send the transaction with the estimated gas limit and value
-        const tx = await contract.ethToAbx({ value: value, gasLimit: gasLimitWithMargin.toHexString() });
+        // Send the transaction with the estimated gas limit and value in Wei
+        const tx = await contract.ethToAbx({ value: valueInWei, gasLimit: gasLimitWithMargin.toHexString() });
 
         const receipt = await tx.wait();
         console.log("exchange", receipt);
+        window.location.reload();
     } catch (error) {
         console.error("Error estimating or sending transaction:", error);
     }
   }
 
 
+
   async function getBalance(contract) {
     try {
         const balance = await contract.balanceOf(address);
-        console.log("Balance:", balance.toString());
+        let bal = balance.toString();
+        setAbxtoken(bal);
     } catch (error) {
         console.error("Error fetching balance:", error);
     }
   }
-
 
   const executeContractWrite = () => {
     let abxContract = createABXContract();
@@ -149,21 +149,29 @@ export default function BuyArtBlockToken() {
     console.log(abxToEthContract);
     // approve(abxContract);
     // addLiquidity(abxToEthContract);
-    // exchange(abxToEthContract);
-    getBalance(abxContract);
+    exchange(abxToEthContract);
+    // getBalance(abxContract);
   };
+
+  useEffect(() => {
+    if (isConnected) {
+      let abxContract = createABXContract();
+      let abxToEthContract = createABXToEthContract();
+      getBalance(abxContract);
+    }
+  }, [isConnected]);
 
   return (
     <div className="bg-gradient-to-b from-blue-400 to-blue-600 p-6 rounded-lg shadow-md mx-auto w-64 md:w-96">
       <h2 className="text-3xl font-extrabold mb-4 text-center text-white">Buy Custom ArtBlock Tokens</h2>
       <div className="mb-4">
         <p className="text-center text-gray-200">Your Current ArtBlock Tokens:</p>
-        <p className="text-3xl font-extrabold text-center text-white">{currentUserArtBlockTokens}</p>
+        <p className="text-3xl font-extrabold text-center text-white">{abxtoken}</p>
       </div>
       <form onSubmit={(e) => e.preventDefault()}>
         <div className="mb-4 text-center">
           <label htmlFor="buyAmount" className="block text-sm font-semibold text-gray-200">
-            Enter Amount in Ether:
+            Enter Amount in Wei:
           </label>
           <div className="relative rounded-md shadow-sm inline-block">
             <input
@@ -175,7 +183,7 @@ export default function BuyArtBlockToken() {
               value={buyAmount}
               onChange={(e) => setBuyAmount(Number(e.target.value))}
             />
-            <span className="absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500">ETH</span>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500">Wei</span>
           </div>
         </div>
         <div className="text-center">
@@ -190,19 +198,3 @@ export default function BuyArtBlockToken() {
     </div>
   );
 };
-
-
-
-
-
-
-    // // Call the hooks directly within the component's body
-    // const { config } = usePrepareContractWrite({
-    //   address: EtherToABXAddress.contractAddress as `0x${string}`,
-    //   abi: EtherToABXABI.abi,
-    //   functionName: 'approve',
-    //   args: [approveValue],
-    // });
-    // console.log(config);
-    // const { data, isLoading, isSuccess, write } = useContractWrite(config);
-    // console.log(isSuccess);
