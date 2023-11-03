@@ -1,8 +1,8 @@
-'client'
 import React, { useState } from 'react';
-import { useContractWrite, usePrepareContractWrite } from 'wagmi';
 import EtherToABXABI from '../../contractInfo/EtherToABX/EtherToABXABI.json';
 import EtherToABXAddress from '../../contractInfo/EtherToABX/EtherToABXAddress.json';
+import ABXABI from '../../contractInfo/ABX/ABXABI.json';
+import ABXAddress from '../../contractInfo/ABX/ABXAddress.json';
 import { useAccount } from 'wagmi';
 import { ethers } from 'ethers';
 
@@ -18,34 +18,139 @@ export default function BuyArtBlockToken() {
     },
   })
 
-  const createEthereumContract = (): ethers.Contract | null => {
+  const createABXToEthContract = (): ethers.Contract | null => {
     const { ethereum } = window as Window & { ethereum?: any };
 
     const contractAddress = EtherToABXAddress.contractAddress;
     const contractABI = EtherToABXABI.abi;
+    
     if (typeof ethereum !== "undefined") {
       const provider = new ethers.providers.Web3Provider(ethereum);
       const signer = provider.getSigner();
-      const transactionsContract = new ethers.Contract(
+      const Contract = new ethers.Contract(
         contractAddress,
         contractABI,
         signer
-      );
-      return transactionsContract;
+      );      
+      return Contract;
     }
     return null;
   };
 
-  async function result(contract){
-    let tx = await contract.add_ABX_liquidity(100); 
-    let reciept = await tx.wait()
-    console.log(reciept)
+  const createABXContract = (): ethers.Contract | null => {
+    const { ethereum } = window as Window & { ethereum?: any };
+
+    const contractAddress = ABXAddress.contractAddress;
+    const contractABI = ABXABI.abi;
+    
+    if (typeof ethereum !== "undefined") {
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const Contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );      
+      return Contract;
+    }
+    return null;
+  };
+
+  async function approve(contract) {
+    const spenderAddress = EtherToABXAddress.contractAddress;
+    const amountToApprove = 100;
+
+    try {
+        // Estimate the gas limit for the `approve` function call
+        const gasEstimation = await contract.estimateGas.approve(spenderAddress, amountToApprove);
+
+        console.log("Gas Estimation:", gasEstimation);
+
+        // You can add a margin to the gas estimation if needed
+        const gasLimitWithMargin = gasEstimation.mul(2);
+
+        // Send the transaction with the estimated gas limit
+        const tx = await contract.approve(spenderAddress, amountToApprove, {
+            gasLimit: gasLimitWithMargin.toHexString()
+        });
+
+        const receipt = await tx.wait();
+        console.log("approve", receipt);
+    } catch (error) {
+        console.error("Error estimating or sending transaction:", error);
+    }
+}
+
+
+  async function addLiquidity(contract) {
+    const amount = 100;
+
+    try {
+        // Estimate the gas limit for the `add_ABX_liquidity` function call
+        const gasEstimation = await contract.estimateGas.add_ABX_liquidity(amount);
+
+        console.log("Gas Estimation:", gasEstimation);
+
+        // You can add a margin to the gas estimation if needed
+        const gasLimitWithMargin = gasEstimation.mul(2);
+
+        // Send the transaction with the estimated gas limit
+        const tx = await contract.add_ABX_liquidity(amount, {
+            gasLimit: gasLimitWithMargin.toHexString()
+        });
+
+        const receipt = await tx.wait();
+        console.log("liquidity", receipt);
+    } catch (error) {
+        console.error("Error estimating or sending transaction:", error);
+    }
   }
 
+
+  async function exchange(contract) {
+    const valueInEth = '0.00005';
+    const valueInWei = ethers.utils.parseEther(valueInEth);
+    const value = Math.floor(parseInt("0.05") / 10)
+
+    try {
+        // Estimate the gas limit for the `ethToAbx` function call with the specified value
+        const gasEstimation = await contract.estimateGas.ethToAbx();
+
+        console.log("Gas Estimation:", gasEstimation);
+
+        // You can add a margin to the gas estimation if needed
+        const gasLimitWithMargin = gasEstimation.mul(2);
+
+        // Send the transaction with the estimated gas limit and value
+        const tx = await contract.ethToAbx({ value: value, gasLimit: gasLimitWithMargin.toHexString() });
+
+        const receipt = await tx.wait();
+        console.log("exchange", receipt);
+    } catch (error) {
+        console.error("Error estimating or sending transaction:", error);
+    }
+  }
+
+
+  async function getBalance(contract) {
+    try {
+        const balance = await contract.balanceOf(address);
+        console.log("Balance:", balance.toString());
+    } catch (error) {
+        console.error("Error fetching balance:", error);
+    }
+  }
+
+
   const executeContractWrite = () => {
-    let contract = createEthereumContract();
-    console.log(contract);
-    result(contract);
+    let abxContract = createABXContract();
+    let abxToEthContract = createABXToEthContract();
+    console.log(abxContract);
+    console.log(abxToEthContract);
+    // approve(abxContract);
+    // addLiquidity(abxToEthContract);
+    // exchange(abxToEthContract);
+    getBalance(abxContract);
   };
 
   return (

@@ -8,7 +8,7 @@ export default function NavbarPlatform() {
       <div className="mx-auto max-w-8xl px-4 sm:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
-            <Link href="/platform">
+            <Link href="/">
               <a className="flex items-center space-x-2">
                 <img
                   className="h-8 w-8 lg:hidden cursor-pointer"
@@ -28,7 +28,7 @@ export default function NavbarPlatform() {
             <Link href="/buyArtBlockToken">
               <a className="text-gray-600 hover:text-gray-800 font-extrabold">Buy Tokens</a>
             </Link>
-            <Link href="/create-community">
+            <Link href="/createCommunity">
               <a className="text-gray-600 hover:text-gray-800 font-extrabold">Create Community</a>
             </Link>
             <Link href="/join-community">
