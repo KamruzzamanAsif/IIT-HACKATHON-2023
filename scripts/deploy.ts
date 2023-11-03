@@ -8,21 +8,41 @@ const contractDetailsDataPath = path.join(__dirname, "../", "frontend", "src", "
 const jsonData = fs.readFileSync(contractDetailsDataPath, 'utf8');
 const jsonObject = JSON.parse(jsonData);
 
-
-async function main() {
+async function deployABX(){
   // const lockedAmount = ethers.utils.parseEther("1");
 
-  const Greeter = await ethers.getContractFactory("Greeter");
-  // const greeting = await Greeting.deploy("Hello world", { value: lockedAmount });
-  const greeter = await Greeter.deploy("Hello world");
+  const ABX = await ethers.getContractFactory("ArtBlockCurrency");
+  const abx = await ABX.deploy();
 
-  await greeter.deployed();
+  await abx.deployed();
 
-  console.log("Greeting contract deployed to: ", greeter.address);
+  console.log("ABX contract deployed to: ", abx.address);
 
-  jsonObject.contractAddress = greeter.address;
+  jsonObject.contractAddress = abx.address;
   const updatedJsonData = JSON.stringify(jsonObject, null, 2);
   fs.writeFileSync(contractDetailsDataPath, updatedJsonData, 'utf8');
+  return abx.address;
+}
+
+
+async function deployEtherToABXExchangeContract(abx_address: string){
+  // const lockedAmount = ethers.utils.parseEther("1");
+
+  const ABX = await ethers.getContractFactory("EtherToABX");
+  const abx = await ABX.deploy(abx_address);
+
+  await abx.deployed();
+
+  console.log("Ether to ABX contract deployed to: ", abx.address);
+
+  jsonObject.contractAddress = abx.address;
+  const updatedJsonData = JSON.stringify(jsonObject, null, 2);
+  fs.writeFileSync(contractDetailsDataPath, updatedJsonData, 'utf8');
+}
+
+async function main() {
+  let abx_address = await deployABX();
+  await deployEtherToABXExchangeContract(abx_address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

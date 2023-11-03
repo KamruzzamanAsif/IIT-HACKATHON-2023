@@ -1,17 +1,51 @@
+'client'
 import React, { useState } from 'react';
+import { useContractWrite, usePrepareContractWrite } from 'wagmi';
+import EtherToABXABI from '../../contractInfo/EtherToABX/EtherToABXABI.json';
+import EtherToABXAddress from '../../contractInfo/EtherToABX/EtherToABXAddress.json';
+import { useAccount } from 'wagmi';
+import { ethers } from 'ethers';
 
-const BuyArtBlockToken: React.FC = () => {
-  // Replace these placeholders with actual values from your application state
-  const currentUserArtBlockTokens = 100;
-  const customArtBlockTokenPrice = 0.1;
+export default function BuyArtBlockToken() {
+  const currentUserArtBlockTokens: number = 100;
+  const customArtBlockTokenPrice: number = 0.1;
+  const approveValue: number = 1000;
+  const [buyAmount, setBuyAmount] = useState<number>(0);
 
-  const [buyAmount, setBuyAmount] = useState(0);
+  const { address, isConnected, connector } = useAccount({
+    async onConnect({ address, connector, isReconnected }) {
+      console.log('Connected', { address, connector, isReconnected })
+    },
+  })
 
-  // Function to handle buying ArtBlockTokens
-  const handleBuyTokens = () => {
-    // Implement your buying logic here
-    // This could involve interacting with a smart contract
-    // and MetaMask integration, but that's beyond the scope of this example.
+  const createEthereumContract = (): ethers.Contract | null => {
+    const { ethereum } = window as Window & { ethereum?: any };
+
+    const contractAddress = EtherToABXAddress.contractAddress;
+    const contractABI = EtherToABXABI.abi;
+    if (typeof ethereum !== "undefined") {
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const transactionsContract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+      return transactionsContract;
+    }
+    return null;
+  };
+
+  async function result(contract){
+    let tx = await contract.add_ABX_liquidity(100); 
+    let reciept = await tx.wait()
+    console.log(reciept)
+  }
+
+  const executeContractWrite = () => {
+    let contract = createEthereumContract();
+    console.log(contract);
+    result(contract);
   };
 
   return (
@@ -24,7 +58,7 @@ const BuyArtBlockToken: React.FC = () => {
       <form onSubmit={(e) => e.preventDefault()}>
         <div className="mb-4 text-center">
           <label htmlFor="buyAmount" className="block text-sm font-semibold text-gray-200">
-            Amount to Buy:
+            Enter Amount in Ether:
           </label>
           <div className="relative rounded-md shadow-sm inline-block">
             <input
@@ -36,19 +70,15 @@ const BuyArtBlockToken: React.FC = () => {
               value={buyAmount}
               onChange={(e) => setBuyAmount(Number(e.target.value))}
             />
-            <span className="absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500">Tokens</span>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500">ETH</span>
           </div>
-        </div>
-        <div className="mb-6 text-center">
-          <p className="text-gray-200">Total Cost:</p>
-          <p className="text-3xl font-extrabold text-white">{(buyAmount * customArtBlockTokenPrice).toFixed(2)} ETH</p>
         </div>
         <div className="text-center">
           <button
-            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-lg font-semibold"
-            onClick={handleBuyTokens}
+            className="bg-blue-500 hover-bg-blue-600 text-white py-2 px-4 rounded-md text-lg font-semibold"
+            onClick={executeContractWrite}
           >
-            Buy Custom ArtBlock Tokens
+            Exchange With ArtBlock Tokens
           </button>
         </div>
       </form>
@@ -56,4 +86,18 @@ const BuyArtBlockToken: React.FC = () => {
   );
 };
 
-export default BuyArtBlockToken;
+
+
+
+
+
+    // // Call the hooks directly within the component's body
+    // const { config } = usePrepareContractWrite({
+    //   address: EtherToABXAddress.contractAddress as `0x${string}`,
+    //   abi: EtherToABXABI.abi,
+    //   functionName: 'approve',
+    //   args: [approveValue],
+    // });
+    // console.log(config);
+    // const { data, isLoading, isSuccess, write } = useContractWrite(config);
+    // console.log(isSuccess);
