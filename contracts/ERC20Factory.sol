@@ -13,7 +13,7 @@ contract ERC20Factory is ERC20, ERC20Burnable, ERC20Pausable, Ownable, ERC20Perm
         Ownable(_token_owner)
         ERC20Permit(tokenName)
     {
-        _mint(msg.sender, initialAmount * 10 ** decimals());
+        _mint(_token_owner, initialAmount * 10 ** decimals());
     }
 
     function pause() public onlyOwner {
