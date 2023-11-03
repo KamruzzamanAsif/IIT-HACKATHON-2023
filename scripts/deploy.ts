@@ -12,7 +12,7 @@ const jsonObject = JSON.parse(jsonData);
 async function deployABX(){
   // const lockedAmount = ethers.utils.parseEther("1");
 
-  const ABX = await ethers.getContractFactory("ArtBlockCurrency");
+  const ABX = await ethers.getContractFactory("ABX");
   const abx = await ABX.deploy();
 
   await abx.deployed();
