@@ -11,13 +11,13 @@ describe('Multi-auction Test Suite', () => {
     const [owner, acc1, acc2,...otherAccounts] = await ethers.getSigners();
     const abx: ABX = await new ABX__factory(owner).deploy();
     const art: ArtNFT = await new ArtNFT__factory(owner).deploy("0xb8476f31E076e00683e2D1D3Cc87097C6A5dB0F6");
-    const daofactory: DAOFactory = await new DAOFactory__factory(owner).deploy(art.address);
+    const daofactory: DAOFactory = await new DAOFactory__factory(owner).connect(owner).deploy(art.address);
 
     await abx.approve(daofactory.address, 100000);
-    const daofactory_object = await daofactory.createDAO("Abhi Fan Club", "Abhi Token", "ABJToken");
+    const daofactory_object = await daofactory.connect(owner).createDAO("Abhi Fan Club", "Abhi Token", "ABJToken");
     const daoid = daofactory_object.value;
     const daoTokenList = await daofactory.getAllTokenList();
-    const daoToken = daoTokenList.at(daoid);
+    const daoToken = daoTokenList[daoid];
     const daoAddressList = await daofactory.getAllCommunityAddress();
 
     const dao = await ethers.getContractAt("DAO", daoAddressList[daoid]);
@@ -51,8 +51,12 @@ describe('Multi-auction Test Suite', () => {
     const currentPriceObject = await multiauction.getCurrentPrice(auctionIdObject.value);
     const communityTokenInstance = await ethers.getContractAt("ERC20Factory", daoToken);
 
-    await communityTokenInstance.approve(multiauction.address, ethers.utils.parseEther("100")); // Assuming tokens have 18 decimal places and you want to approve 10 tokens
-    await multiauction.buy(auctionIdObject.value, currentPriceObject.value);
+    const requiredAmount = currentPriceObject.value;
+    await communityTokenInstance.approve(multiauction.address, requiredAmount);
+    console.log(communityTokenInstance.balanceOf(owner.address));
+
+    await multiauction.buy(auctionIdObject.value, requiredAmount);
+
     expect(await multiauction.auctions.length==1);
   });
 });
