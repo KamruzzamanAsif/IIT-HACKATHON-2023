@@ -14,12 +14,12 @@ contract DAOFactory {
     event DAOCreated(address daoAddress, address tokenAddress);
 
     // Creates a new DAO and generates a native community token
-    function createDAO(string memory community_name) external returns (address) {
+    function createDAO(string memory community_name, address nft_address) external returns (address) {
         // Create a new ERC20 token for the DAO
         ERC20 token = new ERC20Factory(1000000, "DAO Token", "DAO");
 
         // Create a new DAO contract
-        DAO dao = new DAO(community_name, address(token));
+        DAO dao = new DAO(community_name, address(token), nft_address);
 
         // Add the DAO to the mapping
         daoToToken[address(dao)] = token;
