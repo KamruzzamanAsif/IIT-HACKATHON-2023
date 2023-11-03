@@ -1,0 +1,3 @@
+- [ ] Write test case for one contract
+- [ ] Write test case for next contract, now you know how to test connected contracts.
+- [ ] Now you can easily test the rest of the contracts
