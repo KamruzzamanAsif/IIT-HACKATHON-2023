@@ -25,23 +25,6 @@ export default function Home() {
   )
 }
 
-function Header() {
-  return (
-    <header className={styles.header}>
-      <div>
-        <ThemeToggleList />
-      </div>
-      <div className="flex items-center">
-        <ThemeToggleButton /> header <ThemeToggleList />
-      </div>
-
-      <div className="flex items-center">
-        <ThemeToggleButton />
-        <ThemeToggleList />
-      </div>
-    </header>
-  )
-}
 
 function Main() {
   const [showAlert, setShowAlert] = useState(false)
@@ -221,25 +204,5 @@ function Main() {
         </div>
       )}
     </main>
-  )
-}
-
-
-
-function Footer() {
-  return (
-    <footer className={styles.footer}>
-      <div>
-        <ThemeToggleList />
-      </div>
-      <div className="flex items-center">
-        <ThemeToggleButton /> footer <ThemeToggleList />
-      </div>
-
-      <div className="flex items-center">
-        <ThemeToggleButton />
-        <ThemeToggleList />
-      </div>
-    </footer>
   )
 }
