@@ -10,7 +10,7 @@ describe('Multi-auction Test Suite', () => {
   async function deployOnceFixture() {
     const [owner, acc1, acc2,...otherAccounts] = await ethers.getSigners();
     const abx: ABX = await new ABX__factory(owner).deploy();
-    const art: ArtNFT = await new ArtNFT__factory(owner).deploy("0xb8476f31E076e00683e2D1D3Cc87097C6A5dB0F6");
+    const art: ArtNFT = await new ArtNFT__factory(owner).deploy(owner.address);
     const daofactory: DAOFactory = await new DAOFactory__factory(owner).connect(owner).deploy(art.address);
 
     await abx.approve(daofactory.address, 100000);
@@ -29,7 +29,10 @@ describe('Multi-auction Test Suite', () => {
     console.log("Control reaches here...");
     const multiauction : MultiAuction = await new MultiAuction__factory(owner).deploy(daoToken);
 
-    return { abx, multiauction, art, daoid, dao, daoToken, nftid, daofactory, owner, acc1, otherAccounts };
+    const communityTokenInstance = await ethers.getContractAt("ERC20Factory", daoToken);
+
+
+    return { abx, multiauction, art, communityTokenInstance, daoid, dao, daoToken, nftid, daofactory, owner, acc1, otherAccounts };
   }
 
   it("Check Community Token", async function () {
@@ -41,15 +44,17 @@ describe('Multi-auction Test Suite', () => {
 
   it("Create auction and put your item", async function () {
     const { multiauction, daoid, art, dao, daofactory, nftid, owner, otherAccounts } = await loadFixture(deployOnceFixture);
+    await communityTokenInstance.approve(multiauction.address, 100000);
     await multiauction.createAuction(10, 1, art.address, nftid);
     expect(await multiauction.auctions.length==1);
   });
   it("Buy from the auction", async function () {
     const { abx, multiauction, daoid, art, dao, owner, daoToken, daofactory, nftid, otherAccounts } = await loadFixture(deployOnceFixture);
+    await communityTokenInstance.approve(multiauction.address, 100000);
+
     const auctionIdObject = await multiauction.createAuction(10, 1, art.address, nftid);
 
     const currentPriceObject = await multiauction.getCurrentPrice(auctionIdObject.value);
-    const communityTokenInstance = await ethers.getContractAt("ERC20Factory", daoToken);
 
     const requiredAmount = currentPriceObject.value;
     await communityTokenInstance.approve(multiauction.address, requiredAmount);
