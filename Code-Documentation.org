@@ -141,7 +141,7 @@ contract DAO {
 
 ** DAOFactory
 This is our core factory pattern. Note that, we keep some arrays here due to the necessity of these information in frontend side. The arrays were also a contingency to handle the cases where the frontend needs to know something.
-#+begin_sec solidity
+#+begin_src solidity
 contract DAOFactory {
     address nft_address;
     string[] communityNameList;
