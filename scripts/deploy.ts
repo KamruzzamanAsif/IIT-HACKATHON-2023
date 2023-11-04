@@ -134,7 +134,6 @@ async function main() {
   await deployAMM(abx_address, abx_address);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main().catch((error) => {
   console.error(error);
