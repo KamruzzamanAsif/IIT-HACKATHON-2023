@@ -1,6 +1,8 @@
+* About
+A DAO platform with native currency and a DeX for liquidity among the currency. Additionally, the platform can post IPFS art content and after voting, the arts are minted as quality NFT with certainty. Royalty is storngly tracked over all NFT exchange. Dutch Auction system and a market place are used for the communiation and exchange of the tokens.
 * Features
 [[./resources/Test_Coverage.png]]
 * External Sources
-[1]: https://itnext.io/building-a-decentralized-autonomous-organization-dao-from-scratch-a2846725013b
-[2]: https://dev.to/fassko/implementing-the-erc-2981-nft-royalty-standard-with-solidity-a-game-changer-for-creators-to-receive-income-from-every-sale-1e6j
-[3]: https://solidity-by-example.org/defi/constant-product-amm/
+1. https://itnext.io/building-a-decentralized-autonomous-organization-dao-from-scratch-a2846725013b
+2. https://dev.to/fassko/implementing-the-erc-2981-nft-royalty-standard-with-solidity-a-game-changer-for-creators-to-receive-income-from-every-sale-1e6j
+3. https://solidity-by-example.org/defi/constant-product-amm/
