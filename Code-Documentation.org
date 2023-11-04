@@ -368,6 +368,7 @@ contract AMM {
 
 * Did we integrate the components?
 Yes, we did. We did testing to demonstrate and prove the functionality of our system. Here are only 3 of such test cases that demonstrate the complete capability of our system.
+[[./resources/Test_Coverage.png]]
 
 ** DeX and DAO Integraion
 #+begin_src solidity
@@ -432,6 +433,7 @@ async function deployOnceFixture() {
 
 
 * Summary
+
 
 * Bugs
 - Checking product genre
