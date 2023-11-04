@@ -1,11 +1,23 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import {Web3Storage} from 'web3.storage'
+import mappedData from '../../contractInfo/mappedData.json'
+import DAOABI from '../../contractInfo/DAO/DAOABI.json'
+import { useAccount } from 'wagmi';
+import { ethers } from 'ethers';
 
 export default function PublishContent() {
   const [contentImage, setContentImage] = useState<File | null>(null);
   const [contentName, setContentName] = useState<string>('');
   const [contentType, setContentType] = useState<string>('');
+  const [contentPrice, setContentPrice] = useState<Number>(0);
   const [contentDescription, setContentDescription] = useState<string>('');
+  const [contentCommunity, setContentCommunity] = useState<string>('');
+
+  const { address, isConnected, connector } = useAccount({
+    async onConnect({ address, connector, isReconnected }) {
+      console.log('Connected', { address, connector, isReconnected })
+    },
+  })
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -16,14 +28,21 @@ export default function PublishContent() {
     setContentName(event.target.value);
   };
 
-  const handleTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setContentType(event.target.value);
+  const handleTypeChange = (e) => {
+    setContentType(e.target.value);
+  };
+
+  const handlePriceChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setContentPrice(Number(event.target.value));
   };
 
   const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setContentDescription(event.target.value);
   };
 
+  const handleCommunityChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setContentCommunity(event.target.value);
+  };
 
   // WEB3 STORAGE CODE
   const client = new Web3Storage({ token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDlBNGQwNDJCMTY3Zjk5NTMxREY3MWViMTA2YzJDOTREZjc5YTg4NTQiLCJpc3MiOiJ3ZWIzLXN0b3JhZ2UiLCJpYXQiOjE2OTkwMjQ0Mjk2MTQsIm5hbWUiOiJhcnRzIn0.A8itF1rJfI5Y2uvZEaMoTx4AV_s2sLiDPeqxycwSgqY"});
@@ -34,11 +53,47 @@ export default function PublishContent() {
     return cid
   }
    
+  function getDAOAddress(contentCommunity){
+    const matchingCommunity = mappedData.find((community) => community.name === contentCommunity);
+
+    if (matchingCommunity) {
+      return matchingCommunity.address;
+    } else {
+      return "Community not found";
+    }
+  }
+
+  const createDAOContract = (DAOAddress): ethers.Contract | null => {
+    const { ethereum } = window as Window & { ethereum?: any };
+
+    const contractAddress = DAOAddress;
+    const contractABI = DAOABI.abi;
+    
+    if (typeof ethereum !== "undefined") {
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const Contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );      
+      return Contract;
+    }
+    return null;
+  };
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     // You can handle the form submission here, e.g., sending data to a server.
-    storeFiles(contentImage);
+    const contentCid = storeFiles(contentImage);
+
+    const DAOAddress = getDAOAddress(contentCommunity);
+    
+    const DAOContract = createDAOContract(DAOAddress);
+    console.log(DAOContract);
+
+    DAOContract.propose(contentName, contentDescription, contentCid, contentPrice, 10, 1);
+
     console.log('Content Image:', contentImage);
     console.log('Content Name:', contentName);
     console.log('Content Type:', contentType);
@@ -70,11 +125,35 @@ export default function PublishContent() {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-600 text-sm font-semibold mb-2">Content Type</label>
+      <label className="block text-gray-600 text-sm font-semibold mb-2">
+        Content Type
+      </label>
+      <select
+        value={contentType}
+        onChange={handleTypeChange}
+        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
+        required
+      >
+        <option value="General">General</option>
+        <option value="Exclusive">Exclusive</option>
+      </select>
+    </div>
+        <div className="mb-4">
+          <label className="block text-gray-600 text-sm font-semibold mb-2">Content Price</label>
+          <input
+            type="number"
+            value={contentPrice.toString()}
+            onChange={handlePriceChange}
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-600 text-sm font-semibold mb-2">Community Name</label>
           <input
             type="text"
-            value={contentType}
-            onChange={handleTypeChange}
+            value={contentCommunity}
+            onChange={handleCommunityChange}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
             required
           />
