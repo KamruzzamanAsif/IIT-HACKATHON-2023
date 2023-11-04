@@ -1,0 +1,369 @@
+* Innovation
+- Factory Pattern
+- Unit Testing
+- Gas Optimization
+- AMA Algorithm
+- Dutch Style Auction
+- Community native token for Auction and Marketpalce made it very complex to test due to a long dependency
+** Why Factory Pattern?
+Simpler code means less chance of costly bugs to occur. Additionally, simple factory pattern implementations don't add any significant gas consumption penalty[1].
+
+We can prove that it reduces code complexity by demonstration MultiAuction and DAOFactory contracts.
+
+* ArtBlock Platform Token
+#+begin_src solidity
+contract ABX is ERC20, ERC20Permit {
+    constructor()
+        ERC20("ArtBlockCurrency", "ABX")
+        ERC20Permit("ArtBlockCurrency")
+    {
+        _mint(msg.sender, 10000000 * 10 ** decimals());
+    }
+}
+#+end_src
+
+We initialize with a certain amount of token minted because ideally, a platform should possess some native currenct tokens that others can readily use.
+
+* Constant Ether to Platform Token(ABX) Exchange
+According to the requirment, we use constant ethToABX exchange scheme.
+#+begin_src solidity
+contract EtherToABX {
+    IERC20  abx_token;
+    uint256 ethToABXExchangeRate = 2; //2 ABX = 1eth
+.........................
+.........................
+    function ethToAbx() payable public {
+        etherReserve += msg.value;
+        uint256 abx_amount_to_exchange = calculateEtherAmount(msg.value);
+        abx_token.transfer(msg.sender, abx_amount_to_exchange);
+    }
+}
+#+end_src
+
+* DAO/Community for Sharing your art!
+The ArtBlock platform allows free creation of DAO/communities. Each communities will have their own ~native community currency~. For robust implementation, we considered factory pattern. The reasons were described in section 1.2. The structure of the factory pattern is shown below.
+
+[[resources/factory_pattern.png]]
+
+** ERC20Factory
+As usual. The only difference is that it takes ~token symbol~, ~token name~ as input to make different representation of the same IERC20 token for different communities.
+#+begin_src solidity
+contract ERC20Factory is ERC20, ERC20Burnable, ERC20Pausable, Ownable, ERC20Permit {
+    constructor(uint256 initialAmount, string memory tokenName, string memory tokenSymbol, address _token_owner)
+        ERC20(tokenName, tokenSymbol)
+        Ownable(_token_owner)
+        ERC20Permit(tokenName)
+    {
+        _mint(_token_owner, initialAmount * 10 ** decimals());
+    }
+..................
+}
+#+end_src
+
+** DAO Platform with Weighted Voting Option
+We split proposal information into a structure for code simplification.
+import "./ArtNFT.sol";
+
+contract DAO {
+    string public community_name;
+    IERC20 public token;
+    ArtNFT public nft;
+
+    struct proposal {
+        uint256 pid;
+        address proposer;
+        string name;
+        string description;
+        string art_uri;
+        uint256 upvote;
+        uint256 downvote;
+        uint256 abxAmountLocked;
+        uint256 startTime;
+        uint256 endTime;
+        address[] voters;
+        uint32 genreCode;
+    }
+
+    proposal[] public proposes;
+
+    constructor(string memory _community_name, address token_address, address _nft_address) {
+        community_name = _community_name;
+        nft = ArtNFT(_nft_address);
+        token = ERC20(token_address);
+    }
+
+
+    function propose(string memory name, string calldata description, string memory art_uri, uint256 abxAmountLocked, uint256 endTime, uint32 genreCode) external returns (uint256){
+        uint256 pid = proposes.length;
+        proposes.push(proposal({
+            pid: pid,
+            proposer: msg.sender,
+            name: name, 
+            description: description,
+            art_uri: art_uri,
+            upvote: 0,
+            downvote: 0,
+            abxAmountLocked: abxAmountLocked,
+            startTime: block.timestamp,
+            endTime: endTime,
+            voters: new address[](0),
+            genreCode: genreCode
+        }));
+
+        token.transferFrom(msg.sender, address(this), abxAmountLocked);
+        return pid;
+    }
+
+    function vote(uint256 proposalId, bool approve) external {
+        uint256 tokenOwned = token.balanceOf(msg.sender);
+
+        if(approve) proposes[proposalId].upvote += tokenOwned;
+        else proposes[proposalId].downvote += tokenOwned;
+        proposes[proposalId].voters.push(msg.sender);
+    }
+
+    function execute(uint256 proposalId) external returns (uint256){
+        if(proposes[proposalId].upvote > proposes[proposalId].downvote){
+            token.transfer(payable(proposes[proposalId].proposer), proposes[proposalId].abxAmountLocked); 
+            return nft.safeMint(msg.sender, proposes[proposalId].art_uri, 10);
+        } 
+    }
+    function getTotalVote(uint256 pid) public view returns (uint256){
+        return proposes[pid].upvote + proposes[pid].downvote;
+    }
+
+    function getContractInfo(uint256 contractId) public view returns (string memory){
+        return proposes[contractId].name;
+    }
+}
+#+end_src
+
+** DAOFactory
+This is our core factory pattern. Note that, we keep some arrays here due to the necessity of these information in frontend side. The arrays were also a contingency to handle the cases where the frontend needs to know something.
+#+begin_sec solidity
+contract DAOFactory {
+    address nft_address;
+    string[] communityNameList;
+    address[] communityAddressList;
+    address[] communityTokenList;
+
+    constructor(address _nft_address){
+        nft_address = _nft_address;
+    }
+
+    function createDAO(string memory community_name, string memory tokenName,string memory tokenSymbol) external returns (uint256) {
+        ERC20 token = new ERC20Factory(1000000, tokenName, tokenSymbol, msg.sender);
+
+        DAO dao = new DAO(community_name, address(token), nft_address);
+        communityNameList.push(community_name);
+        communityAddressList.push(address(dao));
+        communityTokenList.push(address(token));
+
+        return communityNameList.length-1;
+    }
+..................
+}
+#+end_src
+
+* IPFS Based Art NFT with Royalty 
+We use ~ERC721Royalty~ extension in Openzepplin Contracts library to implement royalty setup. ~NOTE:~ IT ONLY WORKS WITH OPENZEPPLIN 5.0.0 and ITVerse recommended boilerplate contained 4.7.0 version which resulted in a hard-to-find error. Hence, we did not have the time to do testing for royalty.
+#+begin_src solidity
+mport "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
+
+contract ArtNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, ERC721Royalty {
+    uint256 private _nextTokenId;
+
+    constructor(address initialOwner)
+        ERC721("ArTNFT", "ANFT")
+        Ownable(initialOwner)
+    {
+        _setDefaultRoyalty(initialOwner, 15); // feeNumerator = 15
+
+    }
+
+
+    function safeMint(address to, string memory uri, uint96 royaltyAmount) public returns (uint256) {
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
+        _setTokenRoyalty(tokenId, to, royaltyAmount);
+        return tokenId;
+    }
+..................
+}
+
+#+end_src
+
+* Dutch Auction 
+We used the definition given in wikipedia to implement Dutch Auction. 
+1. Auction holders can set a high price for their product and a discount rate at which the price decreases with each passing day.
+2. If someone pays the amount of money the product is at a certain time, he gets the product.
+
+#+begin_src solidity
+
+contract MultiAuction {
+    uint private constant DURATION = 7 days;
+    ERC20 public community_token;
+    struct DutchAuction {
+        IERC721 nft;
+        uint nftid;
+        address payable  seller;
+        uint startingPrice;
+        uint startAt;
+        uint expiresAt;
+        uint discountRate;
+    }
+
+    DutchAuction[] public auctions;
+
+    function createAuction(uint256 _startingPrice, uint256 _discountRate, address _nft_token, uint256 _nftid) public returns (uint256){
+        auctions.push(DutchAuction({
+            nft: IERC721(_nft_token),
+            nftid: _nftid,
+            seller: payable(msg.sender),
+            startingPrice: _startingPrice,
+            startAt: block.timestamp,
+            expiresAt: block.timestamp + DURATION,
+            discountRate: _discountRate
+        }));
+        return auctions.length-1;
+    }
+
+    function getCurrentPrice(uint256 auctionId) public view returns (uint256){
+        uint timeElapsed = block.timestamp - auctions[auctionId].startAt;
+        uint discount = auctions[auctionId].discountRate * timeElapsed;
+        return auctions[auctionId].startingPrice - discount;
+    }
+
+    function buy(uint256 auctionId, uint256 amount) external {
+        require(block.timestamp < auctions[auctionId].expiresAt, "auction expired");
+
+        uint price = getCurrentPrice(auctionId);
+        require(amount >= price, "ETH < price");
+
+        auctions[auctionId].nft.transferFrom(auctions[auctionId].seller, msg.sender, auctions[auctionId].nftid);
+        uint refund = amount - price;
+        if (refund > 0) {
+            community_token.transfer(msg.sender, refund);
+        }
+        delete auctions[auctionId];
+    }
+..................
+}
+
+#+end_src
+
+If we look at the ~getCurrentPrice()~ function, we will see that the price decreases with each passing time.
+
+* Marketplace for NFT
+The marketplace is usual, anyone can put an NFT they own with community native token in the market.
+#+begin_src solidity
+contract MarketPlace {
+    ArtNFT public nft_token;
+    ERC20 public native_token;
+
+    struct Product {
+        address owner;
+        uint256 price;
+    }
+
+    mapping(uint256=>Product) products_on_sale; //nftid=>Product
+    Product[] public products;
+    uint256[] public nftlist;
+
+    constructor(address _native_token, address _nft_token){
+        nft_token = ArtNFT(_nft_token);
+        native_token = ERC20(_native_token);
+    }
+
+    function upload_new_product(uint256 nftid,  uint256 price) public{
+        products_on_sale[nftid] = Product({
+            owner: msg.sender,
+            price: price
+        });
+        native_token.transferFrom(msg.sender, address(this), price);
+        products.push(Product({
+            owner: msg.sender,
+            price: price
+        }));
+        nftlist.push(nftid);
+    }
+    function buy(uint256 nftid) public {
+        nft_token.approve(address(this), nftid);
+        native_token.transferFrom(msg.sender, products_on_sale[nftid].owner, products_on_sale[nftid].price);
+        nft_token.safeTransferFrom(products_on_sale[nftid].owner, msg.sender, nftid);
+    }
+..................
+}
+#+end_src
+* Decentralized Exchange using Automated Market Making(AMM) algorithm
+The AMM currently supports exchange between any two tokens registered. Backers need to add liquidity. Based on available reserve, the price isderermined using the simple ~X*Y = Constant~ formula.
+#+begin_src solidity
+contract AMM {
+    IERC20 public tokenA;
+    IERC20 public tokenB;
+    uint256 public reserveA;
+    uint256 public reserveB;
+
+    event Swap(address indexed user, uint256 amountIn, uint256 amountOut);
+
+    constructor(IERC20 _tokenA, IERC20 _tokenB) {
+        tokenA = _tokenA;
+        tokenB = _tokenB;
+    }
+
+    function addLiquidity(uint256 amountA, uint256 amountB) external {
+        require(amountA > 0 && amountB > 0, "Amount must be greater than zero");
+
+        reserveA += amountA;
+        reserveB += amountB;
+
+        require(
+            tokenA.transferFrom(msg.sender, address(this), amountA),
+            "Transfer of tokenA failed"
+        );
+        require(
+            tokenB.transferFrom(msg.sender, address(this), amountB),
+            "Transfer of tokenB failed"
+        );
+    }
+
+    function swap(uint256 amountIn, bool forA) external {
+        require(amountIn > 0, "Amount must be greater than zero");
+
+        uint256 reserveIn = forA ? reserveA : reserveB;
+        uint256 reserveOut = forA ? reserveB : reserveA;
+
+        uint256 amountOut = (amountIn * reserveOut) / (reserveIn + amountIn);
+
+        require(
+            forA
+                ? tokenA.transferFrom(msg.sender, address(this), amountIn)
+                : tokenB.transferFrom(msg.sender, address(this), amountIn),
+            "Transfer of tokenIn failed"
+        );
+
+        require(
+            forA
+                ? tokenB.transfer(msg.sender, amountOut)
+                : tokenA.transfer(msg.sender, amountOut),
+            "Transfer of tokenOut failed"
+        );
+
+        if (forA) {
+            reserveA += amountIn;
+            reserveB -= amountOut;
+        } else {
+            reserveB += amountIn;
+            reserveA -= amountOut;
+        }
+
+        emit Swap(msg.sender, amountIn, amountOut);
+    }
+}
+#+end_src
+
+* Bugs
+- Checking product genre
+* References
+[1]: https://hedera.com/learning/smart-contracts/smart-contract-design-patterns
