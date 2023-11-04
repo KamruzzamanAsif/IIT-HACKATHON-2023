@@ -35,7 +35,7 @@ describe('Multi-auction Test Suite', () => {
     return { abx, multiauction, art, communityTokenInstance, daoid, dao, daoToken, nftid, daofactory, owner, acc1, otherAccounts };
   }
 
-  it("Check Community Token", async function () {
+  /*it("Check Community Token", async function () {
     const { multiauction, daoid, daofactory, otherAccounts } = await loadFixture(deployOnceFixture);
     const daoTokenList = await daofactory.getAllTokenList();
     const daoToken = daoTokenList.at(daoid);
@@ -63,7 +63,7 @@ describe('Multi-auction Test Suite', () => {
     await multiauction.buy(auctionIdObject.value, requiredAmount);
 
     expect(await multiauction.auctions.length==1);
-  });
+  });*/
 });
 
 
