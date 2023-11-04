@@ -1,9 +1,4 @@
-* Creating Ether To ABX Exchange Liquidity Pool
-
-* Creating DAO
-[1]
-
-* Factory Pattern for Creating DAO and Token
+* Features
 
 * External Sources
 [1]: https://itnext.io/building-a-decentralized-autonomous-organization-dao-from-scratch-a2846725013b

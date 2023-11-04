@@ -5,6 +5,8 @@
 - AMA Algorithm
 - Dutch Style Auction
 - Community native token for Auction and Marketpalce made it very complex to test due to a long dependency
+- Integrating 7 different component into a functional system.
+
 ** Why Factory Pattern?
 Simpler code means less chance of costly bugs to occur. Additionally, simple factory pattern implementations don't add any significant gas consumption penalty[1].
 
@@ -363,6 +365,69 @@ contract AMM {
     }
 }
 #+end_src
+
+* Did we integrate the components?
+Yes, we did. We did testing to demonstrate and prove the functionality of our system. Here are only 3 of such test cases that demonstrate the complete capability of our system.
+
+** DeX and DAO Integraion
+#+begin_src solidity
+  beforeEach(async () => {
+    [owner, user] = await ethers.getSigners();
+    const DAOFactory = await ethers.getContractFactory("DAOFactory"); // Replace with your ERC20 contract factory
+    const daofactory = await DAOFactory.connect(owner).deploy(owner.address);
+
+    const daoAId = await daofactory.connect(owner).createDAO("A Community", "A Token", "A");
+    const daoBId = await daofactory.connect(owner).createDAO("B Community", "B Token", "B");
+    const tokenList = await daofactory.getAllTokenList();
+
+    tokenA = await ethers.getContractAt("ERC20Factory", tokenList[daoAId.value]);
+    tokenB = await ethers.getContractAt("ERC20Factory", tokenList[daoBId.value]);
+
+    console.log(await tokenA.balanceOf(owner.address));
+
+    await tokenA.connect(owner).mint(user.address, 10000); // Mint 10,000 tokens to user's address
+    await tokenB.connect(owner).mint(user.address, 10000); // Mint 10,000 tokens to user's address
+
+
+    const AMMFactory = await ethers.getContractFactory("AMM");
+    amm = await AMMFactory.deploy(tokenA.address, tokenB.address);
+  });
+
+#+end_src
+
+** DAO and Auction/Marketplace with NFT
+#+begin_src bash
+async function deployOnceFixture() {
+    const [owner, acc1, acc2,...otherAccounts] = await ethers.getSigners();
+    const abx: ABX = await new ABX__factory(owner).deploy();
+    const art: ArtNFT = await new ArtNFT__factory(owner).deploy(owner.address);
+    const daofactory: DAOFactory = await new DAOFactory__factory(owner).connect(owner).deploy(art.address);
+
+    await abx.approve(daofactory.address, 100000);
+    const daofactory_object = await daofactory.connect(owner).createDAO("Abhi Fan Club", "Abhi Token", "ABJToken");
+    const daoid = daofactory_object.value;
+    const daoTokenList = await daofactory.getAllTokenList();
+    const daoToken = daoTokenList[daoid];
+    const daoAddressList = await daofactory.getAllCommunityAddress();
+
+    const dao = await ethers.getContractAt("DAO", daoAddressList[daoid]);
+    const pid_object = await dao.propose("Exposing abhijitt!", "Abhi is an alien actually, we dont know it!", "ipfs://art.abhi.com", 10, 2, 1); //10ABX, 2s, 1 = genre code, 10=
+    const pid = pid_object.value;
+    await dao.vote(pid, true);
+    let nftObject = await dao.execute(pid);
+    let nftid = nftObject.value;
+    console.log("Control reaches here...");
+    const multiauction : MultiAuction = await new MultiAuction__factory(owner).deploy(daoToken);
+
+    const communityTokenInstance = await ethers.getContractAt("ERC20Factory", daoToken);
+
+
+    return { abx, multiauction, art, communityTokenInstance, daoid, dao, daoToken, nftid, daofactory, owner, acc1, otherAccounts };
+  }
+#+end_src
+
+
+* Summary
 
 * Bugs
 - Checking product genre
