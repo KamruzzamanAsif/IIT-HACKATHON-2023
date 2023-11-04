@@ -73,11 +73,65 @@ async function deployDAOFactory(nft_address: any){
   return daofactory.address;
 }
 
+
+async function deployAuction(nft_address: any){
+  // const lockedAmount = ethers.utils.parseEther("1");
+
+  const AuctionDeploy = await ethers.getContractFactory("MultiAuction");
+  const auction = await AuctionDeploy.deploy(nft_address);
+
+  await auction.deployed();
+
+  console.log("DAOFactory contract deployed to: ", auction.address);
+
+  jsonObject.contractAddress = auction.address;
+  const updatedJsonData = JSON.stringify(jsonObject, null, 2);
+  fs.writeFileSync(contractDetailsDataPath, updatedJsonData, 'utf8');
+  return auction.address;
+}
+
+
+
+async function deployMarketplace(nft_address: any, native_address: any){
+  // const lockedAmount = ethers.utils.parseEther("1");
+
+  const MarketPlace = await ethers.getContractFactory("MarketPlace");
+  const marketplace = await MarketPlace.deploy(native_address, nft_address);
+
+  await marketplace.deployed();
+
+  console.log("DAOFactory contract deployed to: ", marketplace.address);
+
+  jsonObject.contractAddress = marketplace.address;
+  const updatedJsonData = JSON.stringify(jsonObject, null, 2);
+  fs.writeFileSync(contractDetailsDataPath, updatedJsonData, 'utf8');
+  return marketplace.address;
+}
+
+async function deployAMM(tokenA: any, tokenB : any){
+  // const lockedAmount = ethers.utils.parseEther("1");
+
+  const AMM = await ethers.getContractFactory("AMM");
+  const ama = await AMM.deploy(tokenA, tokenB);
+
+  await ama.deployed();
+
+  console.log("DAOFactory contract deployed to: ", ama.address);
+
+  jsonObject.contractAddress = ama.address;
+  const updatedJsonData = JSON.stringify(jsonObject, null, 2);
+  fs.writeFileSync(contractDetailsDataPath, updatedJsonData, 'utf8');
+  return ama.address;
+}
+
 async function main() {
   let abx_address = await deployABX();
   await deployEtherToABXExchangeContract(abx_address);
   let nft_address = await deployArtNFT();
   await deployDAOFactory(nft_address);
+  await deployAuction(nft_address);
+  await deployMarketplace(nft_address, abx_address);
+  await deployAMM(abx_address, abx_address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

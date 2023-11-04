@@ -1,5 +1,7 @@
 * About
 A DAO platform with native currency and a DeX for liquidity among the currency. Additionally, the platform can post IPFS art content and after voting, the arts are minted as quality NFT with certainty. Royalty is storngly tracked over all NFT exchange. Dutch Auction system and a market place are used for the communiation and exchange of the tokens.
+
+Check [[https://github.com/KamruzzamanAsif/IIT-HACKATHON-2023/blob/main/Code-Documentation.org][Code-Documentation.org]] for more information.
 * Features
 [[./resources/Test_Coverage.png]]
 * External Sources

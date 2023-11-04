@@ -103,8 +103,9 @@ export default function Artworks() {
 
     console.log(DAOContract);
 
-    const id = 1;
+    const id:number = 1;
     const flag:boolean = true;
+    // DAOContract.vote(id, flag);
     try {
         // Estimate the gas limit for the `vote` function call
         const gasEstimation = await DAOContract.estimateGas.vote(id, flag);
@@ -112,7 +113,7 @@ export default function Artworks() {
         console.log("Gas Estimation:", gasEstimation);
 
         // You can add a margin to the gas estimation if needed
-        const gasLimitWithMargin = gasEstimation.mul(2);
+        const gasLimitWithMargin = gasEstimation.mul(5);
 
         // Send the transaction with the estimated gas limit
         const tx = await DAOContract.vote(id, flag, {
