@@ -12,7 +12,7 @@ export default function NavbarPlatform() {
               <a className="flex items-center space-x-2">
                 <img
                   className="h-8 w-8 lg:hidden cursor-pointer"
-                  src="/logo-iit.png"
+                  src="/logo-iit.png" 
                   alt="IIT logo"
                 />
                 <img
