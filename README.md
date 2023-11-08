@@ -24,6 +24,20 @@ Check [Code-Documentation.org](https://github.com/KamruzzamanAsif/IIT-HACKATHON-
 12. Original creators set resale royalties
 
 
+## Used Technology
+ - [👷🏽‍♂️ Hardhat](https://www.rainbowkit.com/)
+ - [🌈 RainbowKit](https://hardhat.org/)
+ - [➬ WAGMI](https://wagmi.sh/)
+ - [🌐 Next JS](https://nextjs.org/)
+ - [🗺 Web3.storage]
+ - [🗺 Etherscan](https://etherscan.io/)
+ - [🕹 Typechain](https://github.com/dethcrypto/TypeChain)
+ - [TailwindCSS](https://tailwindcss.com) – Utility-first CSS framework for rapid UI development
+ - [TypeScript](https://www.typescriptlang.org/) – Static type checker for end-to-end typesafety
+ - [Prettier](https://prettier.io/) – Opinionated code formatter for consistent code style
+ - [ESLint](https://eslint.org/) – Pluggable linter for Next.js and TypeScript
+ 
+
 ## Prerequisite
 ```
 Node js
